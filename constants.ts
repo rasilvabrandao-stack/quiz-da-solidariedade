@@ -96,6 +96,30 @@ export const QUESTIONS: Question[] = [
     ],
     correctAnswer: 1,
     explanation: "Uma única bolsa de sangue pode ser separada em componentes e salvar várias vidas."
+  },
+  {
+    id: 9,
+    text: "Se eu não tenho dinheiro, como posso ajudar?",
+    options: [
+      "Não posso ajudar em nada",
+      "Posso doar meu tempo e habilidades",
+      "Devo pedir dinheiro emprestado",
+      "Só ricos podem fazer caridade"
+    ],
+    correctAnswer: 1,
+    explanation: "O voluntariado e a divulgação de causas são formas valiosas e poderosas de doação!"
+  },
+  {
+    id: 10,
+    text: "Em uma campanha de alimentos 'não perecíveis', o que NÃO devo levar?",
+    options: [
+      "Arroz e Feijão",
+      "Macarrão",
+      "Sorvete e Iogurte",
+      "Óleo e Açúcar"
+    ],
+    correctAnswer: 2,
+    explanation: "Alimentos perecíveis (como sorvete) estragam rápido fora da geladeira e não servem para essas campanhas."
   }
 ];
 
