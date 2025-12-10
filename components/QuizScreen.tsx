@@ -19,14 +19,23 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const timerRef = useRef<any>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null); // Ref para a área de feedback
 
   // Lógica do avanço automático
   useEffect(() => {
     if (isAnswered) {
-      // Espera 3 segundos para ler a explicação e avança
+      // 1. Rola a tela automaticamente para mostrar a resposta
+      // Um pequeno delay garante que o elemento já foi renderizado pelo React/Framer Motion
+      setTimeout(() => {
+        if (feedbackRef.current) {
+          feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }, 100);
+
+      // 2. Espera 5 segundos (aumentado de 3s) para ler a explicação e avança
       timerRef.current = setTimeout(() => {
         handleNext();
-      }, 3000);
+      }, 5000);
     }
 
     return () => {
@@ -162,6 +171,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
           <AnimatePresence>
             {isAnswered && (
               <motion.div
+                ref={feedbackRef} // Referência para scroll automático
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -196,7 +206,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
                             className="h-full bg-orange-500"
                             initial={{ width: "0%" }}
                             animate={{ width: "100%" }}
-                            transition={{ duration: 3, ease: "linear" }}
+                            transition={{ duration: 5, ease: "linear" }} // Tempo ajustado para 5s
                         />
                     </motion.div>
                     
