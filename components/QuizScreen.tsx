@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ArrowRight, HelpCircle } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, HelpCircle, Timer } from 'lucide-react';
 import { Question } from '../types';
 
 interface QuizScreenProps {
@@ -18,6 +18,22 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
 }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const timerRef = useRef<any>(null); // Ref para guardar o timer do avanço automático
+
+  // Efeito para avanço automático
+  useEffect(() => {
+    if (isAnswered) {
+      // Espera 3.5 segundos e avança automaticamente
+      timerRef.current = setTimeout(() => {
+        handleNext();
+      }, 3500);
+    }
+
+    // Limpa o timer se o componente desmontar ou mudar
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [isAnswered]);
 
   const handleOptionClick = (index: number) => {
     if (isAnswered) return;
@@ -26,10 +42,13 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   };
 
   const handleNext = () => {
+    // Se o usuário clicar no botão, cancelamos o timer automático para não pular 2x
+    if (timerRef.current) clearTimeout(timerRef.current);
+
     if (selectedOption === null) return;
     const isCorrect = selectedOption === question.correctAnswer;
     
-    // Reset local state for animation exit
+    // Pequeno delay visual para a animação de saída
     setTimeout(() => {
         onAnswer(isCorrect);
         setSelectedOption(null);
@@ -57,9 +76,10 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 flex flex-col h-full justify-center">
+    // Alterado: h-full mantido, mas overflow-y-auto adicionado e justify ajustado para mobile
+    <div className="w-full max-w-4xl mx-auto p-4 flex flex-col h-full overflow-y-auto justify-start md:justify-center pt-8 pb-20 scroll-smooth">
       {/* Progress Bar */}
-      <div className="w-full bg-black/20 h-3 rounded-full mb-8 overflow-hidden backdrop-blur-sm">
+      <div className="w-full bg-black/20 h-3 rounded-full mb-6 md:mb-8 overflow-hidden backdrop-blur-sm shrink-0">
         <motion.div
           className="h-full bg-yellow-400"
           initial={{ width: `${((currentQuestionIndex) / totalQuestions) * 100}%` }}
@@ -75,13 +95,13 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -50, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 relative overflow-hidden"
+          className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 relative overflow-hidden shrink-0"
         >
           {/* Decorative background circle */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-100 rounded-full opacity-50 z-0" />
 
           {/* Question Header */}
-          <div className="relative z-10 mb-8">
+          <div className="relative z-10 mb-6 md:mb-8">
             <span className="inline-block bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold tracking-wide mb-3">
               PERGUNTA {currentQuestionIndex + 1} DE {totalQuestions}
             </span>
@@ -91,7 +111,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
           </div>
 
           {/* Options Grid */}
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {question.options.map((option, index) => {
               // Generate a) b) c) d)
               const letter = String.fromCharCode(97 + index); 
@@ -147,14 +167,17 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
                     </div>
                 </div>
                 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="text-sm text-gray-400 flex items-center gap-2 animate-pulse">
+                        <Timer size={16} /> Próxima em 3 segundos...
+                    </div>
                     <motion.button
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         onClick={handleNext}
-                        className="bg-amber-900 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-amber-800 flex items-center gap-2 transition-colors shadow-lg"
+                        className="w-full md:w-auto bg-amber-900 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-amber-800 flex items-center justify-center gap-2 transition-colors shadow-lg"
                     >
-                        Próxima <ArrowRight size={20} />
+                        Próxima Agora <ArrowRight size={20} />
                     </motion.button>
                 </div>
               </motion.div>
