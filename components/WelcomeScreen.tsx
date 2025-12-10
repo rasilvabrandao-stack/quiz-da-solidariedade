@@ -1,14 +1,27 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { HeartHandshake, Play } from 'lucide-react';
+import { HeartHandshake, Play, Trophy } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onStart: () => void;
+  onViewLeaderboard: () => void;
 }
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, onViewLeaderboard }) => {
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full text-center p-6">
+    <div className="flex flex-col items-center justify-center h-full w-full text-center p-6 relative">
+      
+      {/* Top Right Leaderboard Button */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        onClick={onViewLeaderboard}
+        className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+        title="Ver Ranking"
+      >
+        <Trophy size={24} />
+      </motion.button>
+
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
