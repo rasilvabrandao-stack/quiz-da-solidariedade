@@ -7,9 +7,9 @@ import QuizScreen from './components/QuizScreen';
 import ResultScreen from './components/ResultScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 
-// Firebase Imports
+// Firebase Imports (Realtime Database)
 import { db } from './firebaseConfig';
-import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { ref, push, onValue, query, orderByChild, limitToLast } from 'firebase/database';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>('welcome');
@@ -21,34 +21,37 @@ const App: React.FC = () => {
   // State to hold the randomized questions for the current session
   const [gameQuestions, setGameQuestions] = useState<Question[]>([]);
 
-  // Carregar dados em Tempo Real do Firebase (Online Global)
+  // Carregar dados em Tempo Real do Firebase (Realtime Database)
   useEffect(() => {
-    // Cria uma query para buscar o placar ordenado por pontuação
-    const q = query(
-      collection(db, "leaderboard"),
-      orderBy("score", "desc"),
-      limit(100) // Limita aos top 100 para não pesar
+    // Busca os 100 maiores placares
+    const leaderboardRef = query(
+        ref(db, 'leaderboard'), 
+        orderByChild('score'), 
+        limitToLast(100)
     );
 
-    // onSnapshot ouve mudanças em tempo real. Se alguém jogar em outro PC, atualiza aqui na hora.
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onValue(leaderboardRef, (snapshot) => {
       const loadedRecords: PlayerRecord[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      
+      snapshot.forEach((childSnapshot) => {
+        const data = childSnapshot.val();
         loadedRecords.push({
-          id: doc.id,
+          id: childSnapshot.key as string,
           name: data.name,
           score: data.score,
           totalQuestions: data.totalQuestions,
           date: data.date
         });
       });
-      setRecords(loadedRecords);
+
+      // O Realtime Database retorna em ordem ascendente (menor para maior).
+      // Precisamos inverter para mostrar os maiores primeiro.
+      setRecords(loadedRecords.reverse());
     }, (error) => {
       console.error("Erro ao conectar com o placar online:", error);
-      // Fallback gracioso se não tiver configurado o firebase ainda
     });
 
+    // Cleanup function
     return () => unsubscribe();
   }, []);
 
@@ -96,9 +99,9 @@ const App: React.FC = () => {
   const finishGame = async (finalScore: number) => {
     setGameState('results');
 
-    // Salvar no Banco de Dados Online (Firebase)
+    // Salvar no Realtime Database
     try {
-      await addDoc(collection(db, "leaderboard"), {
+      await push(ref(db, 'leaderboard'), {
         name: playerName,
         score: finalScore,
         totalQuestions: gameQuestions.length,
@@ -106,7 +109,7 @@ const App: React.FC = () => {
       });
     } catch (e) {
       console.error("Erro ao salvar placar online: ", e);
-      alert("Atenção: Não foi possível salvar no placar online. Verifique a configuração do Firebase.");
+      // Fallback silencioso ou alerta opcional
     }
   };
 
