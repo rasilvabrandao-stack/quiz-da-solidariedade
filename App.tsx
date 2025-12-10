@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [playerName, setPlayerName] = useState('');
   const [records, setRecords] = useState<PlayerRecord[]>([]);
+  const [startTime, setStartTime] = useState<number>(0);
   
   // State to hold the randomized questions for the current session
   const [gameQuestions, setGameQuestions] = useState<Question[]>([]);
@@ -40,13 +41,14 @@ const App: React.FC = () => {
           name: data.name,
           score: data.score,
           totalQuestions: data.totalQuestions,
+          timeTaken: data.timeTaken || 9999, // Fallback para registros antigos sem tempo
           date: data.date
         });
       });
 
-      // O Realtime Database retorna em ordem ascendente (menor para maior).
-      // Precisamos inverter para mostrar os maiores primeiro.
-      setRecords(loadedRecords.reverse());
+      // O Realtime Database retorna em ordem ascendente de score.
+      // A ordenação final (score DESC, time ASC) é feita no componente LeaderboardScreen
+      setRecords(loadedRecords);
     }, (error) => {
       console.error("Erro ao conectar com o placar online:", error);
     });
@@ -78,6 +80,9 @@ const App: React.FC = () => {
     const randomQuestions = shuffleQuestions(QUESTIONS);
     setGameQuestions(randomQuestions);
     
+    // Inicia o cronômetro
+    setStartTime(Date.now());
+    
     setGameState('playing');
   };
 
@@ -97,6 +102,9 @@ const App: React.FC = () => {
   };
 
   const finishGame = async (finalScore: number) => {
+    const endTime = Date.now();
+    const timeTakenSeconds = Math.floor((endTime - startTime) / 1000);
+    
     setGameState('results');
 
     // Salvar no Realtime Database
@@ -105,6 +113,7 @@ const App: React.FC = () => {
         name: playerName,
         score: finalScore,
         totalQuestions: gameQuestions.length,
+        timeTaken: timeTakenSeconds,
         date: new Date().toISOString()
       });
     } catch (e) {

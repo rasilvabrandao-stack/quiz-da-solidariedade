@@ -19,5 +19,6 @@ export interface PlayerRecord {
   name: string;
   score: number;
   totalQuestions: number;
+  timeTaken: number; // Tempo em segundos
   date: string;
 }
