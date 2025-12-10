@@ -1,22 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 
-// AVISO: Você precisa pegar as chaves restantes no Console do Firebase:
-// 1. Clique na Engrenagem ⚙️ -> Configurações do Projeto.
-// 2. Role até o final em "Seus aplicativos" (se não tiver, crie um clicando no ícone </>).
-// 3. Copie as chaves que faltam abaixo.
-
+// Configuração do Firebase com as chaves do seu projeto
 const firebaseConfig = {
-  // --- PREENCHA ESTES 3 CAMPOS COM O QUE ESTÁ NO SITE DO FIREBASE ---
-  apiKey: "SUA_API_KEY_AQUI",            // <--- Copie do Firebase e cole aqui
-  messagingSenderId: "SEU_SENDER_ID",    // <--- Copie do Firebase e cole aqui
-  appId: "SEU_APP_ID",                   // <--- Copie do Firebase e cole aqui
-
-  // --- JÁ PREENCHI ESTES COM BASE NO SEU LINK ---
+  apiKey: "AIzaSyCzFTF-TcuC7jCyNTmZQflwjQ1y1aI30GY",
+  authDomain: "quiz-solidariedade-4ffd9.firebaseapp.com",
   databaseURL: "https://quiz-solidariedade-4ffd9-default-rtdb.firebaseio.com",
   projectId: "quiz-solidariedade-4ffd9",
-  authDomain: "quiz-solidariedade-4ffd9.firebaseapp.com",
-  storageBucket: "quiz-solidariedade-4ffd9.appspot.com",
+  storageBucket: "quiz-solidariedade-4ffd9.firebasestorage.app",
+  messagingSenderId: "50046767800",
+  appId: "1:50046767800:web:73c131b04f743546825a4d",
+  measurementId: "G-8RJJCJYQPF"
 };
 
 // Inicializa o Firebase
