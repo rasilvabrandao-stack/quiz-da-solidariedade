@@ -39,7 +39,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
 
   const getOptionClass = (index: number) => {
     const baseClass =
-      "w-full p-5 text-left rounded-2xl border-2 transition-all duration-300 text-lg md:text-xl font-semibold relative overflow-hidden";
+      "w-full p-4 md:p-5 text-left rounded-2xl border-2 transition-all duration-300 text-lg md:text-xl font-semibold relative overflow-hidden";
     
     if (!isAnswered) {
       return `${baseClass} bg-white/90 border-transparent text-amber-900 hover:bg-white hover:scale-[1.02] hover:shadow-lg cursor-pointer`;
@@ -92,20 +92,34 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
 
           {/* Options Grid */}
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {question.options.map((option, index) => (
-              <motion.button
-                key={index}
-                onClick={() => handleOptionClick(index)}
-                className={getOptionClass(index)}
-                whileTap={!isAnswered ? { scale: 0.98 } : {}}
-              >
-                <div className="flex items-center justify-between">
-                    <span>{option}</span>
-                    {isAnswered && index === question.correctAnswer && <CheckCircle className="w-6 h-6" />}
-                    {isAnswered && index === selectedOption && index !== question.correctAnswer && <XCircle className="w-6 h-6" />}
-                </div>
-              </motion.button>
-            ))}
+            {question.options.map((option, index) => {
+              // Generate a) b) c) d)
+              const letter = String.fromCharCode(97 + index); 
+              
+              return (
+                <motion.button
+                  key={index}
+                  onClick={() => handleOptionClick(index)}
+                  className={getOptionClass(index)}
+                  whileTap={!isAnswered ? { scale: 0.98 } : {}}
+                >
+                  <div className="flex items-center justify-between w-full gap-2">
+                      <div className="flex items-center gap-3 text-left">
+                          <span className={`font-black text-xl uppercase opacity-70 ${!isAnswered ? 'text-orange-600' : 'text-inherit'}`}>
+                            {letter})
+                          </span>
+                          <span className="leading-snug">{option}</span>
+                      </div>
+                      
+                      {/* Icons */}
+                      <div className="shrink-0">
+                        {isAnswered && index === question.correctAnswer && <CheckCircle className="w-6 h-6" />}
+                        {isAnswered && index === selectedOption && index !== question.correctAnswer && <XCircle className="w-6 h-6" />}
+                      </div>
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
 
           {/* Feedback Section */}
