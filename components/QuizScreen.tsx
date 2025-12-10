@@ -19,20 +19,24 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const timerRef = useRef<any>(null);
-  const feedbackRef = useRef<HTMLDivElement>(null); // Ref para a área de feedback
+  const containerRef = useRef<HTMLDivElement>(null); // Ref para o container principal que tem scroll
 
   // Lógica do avanço automático
   useEffect(() => {
     if (isAnswered) {
       // 1. Rola a tela automaticamente para mostrar a resposta
-      // Um pequeno delay garante que o elemento já foi renderizado pelo React/Framer Motion
+      // Aumentamos o delay para 300ms para dar tempo da animação de abertura (height: auto) acontecer
       setTimeout(() => {
-        if (feedbackRef.current) {
-          feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        if (containerRef.current) {
+          // Rola o container para o final absoluto (scrollHeight)
+          containerRef.current.scrollTo({
+            top: containerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
         }
-      }, 100);
+      }, 300);
 
-      // 2. Espera 5 segundos (aumentado de 3s) para ler a explicação e avança
+      // 2. Espera 5 segundos para ler a explicação e avança
       timerRef.current = setTimeout(() => {
         handleNext();
       }, 5000);
@@ -88,8 +92,11 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
 
   return (
     // 'overflow-y-auto' permite rolar a tela se a explicação for grande
-    // 'pb-32' adiciona um espaço extra no final para nada ficar cortado
-    <div className="w-full max-w-4xl mx-auto p-4 flex flex-col h-full overflow-y-auto justify-start md:justify-center pt-6 pb-32 scroll-smooth">
+    // Adicionamos ref={containerRef} aqui
+    <div 
+      ref={containerRef}
+      className="w-full max-w-4xl mx-auto p-4 flex flex-col h-full overflow-y-auto justify-start md:justify-center pt-6 pb-32 scroll-smooth"
+    >
       
       {/* Barra de Progresso */}
       <div className="w-full bg-black/20 h-3 rounded-full mb-6 overflow-hidden backdrop-blur-sm shrink-0">
@@ -171,7 +178,6 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
           <AnimatePresence>
             {isAnswered && (
               <motion.div
-                ref={feedbackRef} // Referência para scroll automático
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
