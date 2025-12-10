@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QUESTIONS } from './constants';
-import { GameState, PlayerRecord } from './types';
+import { GameState, PlayerRecord, Question } from './types';
 import WelcomeScreen from './components/WelcomeScreen';
 import NameInputScreen from './components/NameInputScreen';
 import QuizScreen from './components/QuizScreen';
@@ -15,6 +15,9 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [playerName, setPlayerName] = useState('');
   const [records, setRecords] = useState<PlayerRecord[]>([]);
+  
+  // State to hold the randomized questions for the current session
+  const [gameQuestions, setGameQuestions] = useState<Question[]>([]);
 
   // Load records from local storage on mount
   useEffect(() => {
@@ -28,6 +31,16 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Fisher-Yates Shuffle Algorithm
+  const shuffleQuestions = (array: Question[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   const goToNameInput = () => {
     setGameState('inputName');
   };
@@ -36,6 +49,11 @@ const App: React.FC = () => {
     setPlayerName(name);
     setScore(0);
     setCurrentQuestionIndex(0);
+    
+    // Randomize questions here, so every game has a unique order
+    const randomQuestions = shuffleQuestions(QUESTIONS);
+    setGameQuestions(randomQuestions);
+    
     setGameState('playing');
   };
 
@@ -47,7 +65,7 @@ const App: React.FC = () => {
     }
 
     const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < QUESTIONS.length) {
+    if (nextIndex < gameQuestions.length) {
       setCurrentQuestionIndex(nextIndex);
     } else {
       finishGame(newScore);
@@ -60,7 +78,7 @@ const App: React.FC = () => {
       id: Date.now().toString(),
       name: playerName,
       score: finalScore,
-      totalQuestions: QUESTIONS.length,
+      totalQuestions: gameQuestions.length,
       date: new Date().toISOString()
     };
 
@@ -74,6 +92,7 @@ const App: React.FC = () => {
   const restartGame = () => {
     setGameState('welcome');
     setPlayerName('');
+    setGameQuestions([]); // Reset questions
   };
 
   const clearRecords = () => {
@@ -106,11 +125,11 @@ const App: React.FC = () => {
           />
         )}
 
-        {gameState === 'playing' && (
+        {gameState === 'playing' && gameQuestions.length > 0 && (
           <QuizScreen
-            question={QUESTIONS[currentQuestionIndex]}
+            question={gameQuestions[currentQuestionIndex]}
             currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={QUESTIONS.length}
+            totalQuestions={gameQuestions.length}
             onAnswer={handleAnswer}
           />
         )}
@@ -118,7 +137,7 @@ const App: React.FC = () => {
         {gameState === 'results' && (
           <ResultScreen
             score={score}
-            totalQuestions={QUESTIONS.length}
+            totalQuestions={gameQuestions.length > 0 ? gameQuestions.length : QUESTIONS.length}
             playerName={playerName}
             onRestart={restartGame}
             onViewLeaderboard={() => setGameState('leaderboard')}
