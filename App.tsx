@@ -7,7 +7,9 @@ import QuizScreen from './components/QuizScreen';
 import ResultScreen from './components/ResultScreen';
 import LeaderboardScreen from './components/LeaderboardScreen';
 
-const STORAGE_KEY = 'quiz_solidariedade_db';
+// Firebase Imports
+import { db } from './firebaseConfig';
+import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>('welcome');
@@ -19,16 +21,35 @@ const App: React.FC = () => {
   // State to hold the randomized questions for the current session
   const [gameQuestions, setGameQuestions] = useState<Question[]>([]);
 
-  // Load records from local storage on mount
+  // Carregar dados em Tempo Real do Firebase (Online Global)
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setRecords(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse records", e);
-      }
-    }
+    // Cria uma query para buscar o placar ordenado por pontuação
+    const q = query(
+      collection(db, "leaderboard"),
+      orderBy("score", "desc"),
+      limit(100) // Limita aos top 100 para não pesar
+    );
+
+    // onSnapshot ouve mudanças em tempo real. Se alguém jogar em outro PC, atualiza aqui na hora.
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedRecords: PlayerRecord[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedRecords.push({
+          id: doc.id,
+          name: data.name,
+          score: data.score,
+          totalQuestions: data.totalQuestions,
+          date: data.date
+        });
+      });
+      setRecords(loadedRecords);
+    }, (error) => {
+      console.error("Erro ao conectar com o placar online:", error);
+      // Fallback gracioso se não tiver configurado o firebase ainda
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Fisher-Yates Shuffle Algorithm
@@ -72,32 +93,27 @@ const App: React.FC = () => {
     }
   };
 
-  const finishGame = (finalScore: number) => {
-    // Save to "Database" (LocalStorage)
-    const newRecord: PlayerRecord = {
-      id: Date.now().toString(),
-      name: playerName,
-      score: finalScore,
-      totalQuestions: gameQuestions.length,
-      date: new Date().toISOString()
-    };
-
-    const updatedRecords = [...records, newRecord];
-    setRecords(updatedRecords);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRecords));
-    
+  const finishGame = async (finalScore: number) => {
     setGameState('results');
+
+    // Salvar no Banco de Dados Online (Firebase)
+    try {
+      await addDoc(collection(db, "leaderboard"), {
+        name: playerName,
+        score: finalScore,
+        totalQuestions: gameQuestions.length,
+        date: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Erro ao salvar placar online: ", e);
+      alert("Atenção: Não foi possível salvar no placar online. Verifique a configuração do Firebase.");
+    }
   };
 
   const restartGame = () => {
     setGameState('welcome');
     setPlayerName('');
     setGameQuestions([]); // Reset questions
-  };
-
-  const clearRecords = () => {
-    setRecords([]);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
@@ -148,7 +164,6 @@ const App: React.FC = () => {
           <LeaderboardScreen 
             records={records}
             onBack={() => setGameState('welcome')}
-            onClear={clearRecords}
           />
         )}
       </div>
